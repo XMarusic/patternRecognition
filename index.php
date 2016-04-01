@@ -50,12 +50,12 @@
             <div class="songListWrapper">
                  <div class="broadList">
                     <div class="broadHeader"></div>
-                    <ul class="broadSongListUl resultSongListUl" name="resultSongUl"></ul>
+                    <ul class="broadSongListUl contextSongListUl resultSongListUl" id="resultSongUl" name="resultSongUl"></ul>
                 </div>
 
                 <div class="topPickList">
                     <div class="songListHeader topPickHeader">TOP PICKS FOR YOU</div>
-                    <ul class="contentSongList broadSongListUl topPicksUl" name="topSongUl">
+                    <ul class="contentSongList broadSongListUl topPicksUl" id="topSongUl" name="topSongUl">
                         <?php getTopPicks(); ?>
                     </ul>
                 </div>
@@ -64,9 +64,9 @@
                     <div class="headerList">
                         <div class="inline mid-align serialNumber">#</div>
                         <div class="inline mid-align songNameHeader">SONG</div>
-                        <div class="inline mid-align expectedTimeHeader">MEAN PT</div>
+                        <div class="inline mid-align expectedTimeHeader">MT / ET</div>
                     </div>
-                    <ul class="contentSongList contextSongListUl entirePickUl" name="entireSongUl">
+                    <ul class="contentSongList contextSongListUl entirePickUl" id="entireSongUl" name="entireSongUl">
                         <?php getFiles(); ?>
                     </ul>
                 </div>

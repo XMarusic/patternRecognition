@@ -1,16 +1,30 @@
 <?php 
+	if(!defined('ROOT'))
+		define('ROOT', $_SERVER['DOCUMENT_ROOT']);
+	ini_set('memory_limit', '-1');
+		
+	function loadJsonFromFile($addr){
+		return json_decode(file_get_contents($addr), true);
+	}
 
 	function loadFromFile(){
-		return json_decode(file_get_contents('songListtemp.json'), true);
-
+		include ROOT.'/url.php';
+		return loadJsonFromFile($songList);
 	}
 
 	function loadDurationFile(){
-		return json_decode(file_get_contents('inc/duration.json'), true);
+		include ROOT.'/url.php';
+		return loadJsonFromFile($duration);
 	}
 
 	function loadHistoryFile(){
-		return json_decode(file_get_contents('inc/history.json'), true);
+		include ROOT.'/url.php';
+		return loadJsonFromFile($history);
+	}
+
+	function loadIndexMapFile(){
+		include ROOT.'/url.php';
+		return loadJsonFromFile($index_map_path);
 	}
 
 	function getFiles(){
@@ -21,21 +35,25 @@
 			$displayName = $value['displayName'];
 			$Image = $value['albumArt'];
 
-			$array_key = array_search($key, array_column($durationArray, 'key'));
+			$songkey = $value['key'];
+
+			$array_key = array_search($songkey, array_column($durationArray, 'key'));
+
 			$expected_duration = round($durationArray[$array_key]['expected_duration'], 3);
-			$duration = round(($expected_duration * $durationArray[$array_key]['duration'])/60, 2); 
+			$meanduration = round(($expected_duration * $durationArray[$array_key]['duration'])/60, 2); 
+
 			?>
 
-			<li class="songListLi">
+			<li class="songListLi" mainkey="<?php echo $songkey;?>">
                 <div class="inline mid-align songListNumber"><?php echo $numOfSong.".";?></div>
                 <div class="inline mid-align listAlbumArt">
-                    <img class="songListAlbumArt" src="<?php echo @$Image;?>">
+                    <img class="songListAlbumArt" <?php if($Image != "") { ?> src="<?php echo @$Image;?>"<?php } else { ?> src="images/default.png" <?php } ?>>
                 </div>
                 <div class="inline mid-align playIconDiv">
-                    <img name="play_<?php echo $key;?>" class="playIconEntireList listSongPlayIcon" src="images/play.png">
+                    <img name="play_<?php echo $songkey;?>" class="playIconEntireList listSongPlayIcon" src="images/play.png">
                 </div>
                 <div class="inline mid-align songNameList"><?php echo $displayName;?></div>
-                <div class="inline mid-align expectedPlayTime"><?php echo $duration; ?> / <?php echo $expected_duration;?></div>
+                <div class="inline mid-align expectedPlayTime"><span class="song-mduration"><?php echo $meanduration; ?></span> / <span class="song-eduration"><?php echo $expected_duration;?></span></div>
             </li>
 
 			<?php
@@ -43,8 +61,11 @@
 	}
 
 	function getTopPicks(){
+
 		$dictionary = loadFromFile();
 		$topArray = loadDurationFile();
+		$index_map = loadIndexMapFile();
+
 		usort($topArray, function($a, $b)
 		{
 		    if ($a['expected_duration']==$b['expected_duration']) return 0;
@@ -55,8 +76,11 @@
 		for($i = 0; $i<$maxCount; $i++){
 			$key = $topArray[$i]['key'];
 
-			$displayName = $dictionary[$key]['displayName'];
-			$Image = $dictionary[$key]['albumArt'];
+			$songkey = $index_map[$key];
+			//echo "KEY: ".$songkey;
+			
+			$displayName = $dictionary[$songkey]['displayName'];
+			$Image = $dictionary[$songkey]['albumArt'];
 
 			?>
 			<li class="inline mid-align broadListLi">
@@ -75,12 +99,16 @@
 	}
 
 	function getHistory(){
+
 		$historyarray = loadHistoryFile();
 		$dictionary = loadFromFile();
+		$index_map = loadIndexMapFile();
+
 		for($i = 0; $i<15 && $i < sizeof($historyarray); $i++){
 			$key = $historyarray[$i];
+			$songkey = $index_map[$key];
 		?>
-			<li class="historyUlLi leftBarUlLi" hisref="play_<?php echo $key;?>"><?php echo $dictionary[$key]['displayName']; ?></li>
+			<li class="historyUlLi leftBarUlLi" hisref="play_<?php echo $key;?>"><?php echo $dictionary[$songkey]['displayName']; ?></li>
 		<?php
 		}
 	}
