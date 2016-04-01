@@ -3,8 +3,8 @@ var songWindow = [];
 var decay = 0.001;
 var windowLength = 10;
 
-//var songPath = "data/json/songList.json";
-var songPath = "data/json/songListtemp.json";
+var songPath = "data/json/songList.json";
+//var songPath = "data/json/songListtemp.json";
 
 var sim_matrix_path = "data/json/sim_matrix.json";
 var index_map_path = "data/json/index_map.json";
