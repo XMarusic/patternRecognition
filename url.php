@@ -1,12 +1,12 @@
 <?php
 
-	$path = "data/files/songs/";
-	$songList = 'data/json/songList.json';
-	$song_names = 'data/json/songnames.json';
+	// $path = "data/files/songs/";
+	// $songList = 'data/json/songList.json';
+	// $song_names = 'data/json/songnames.json';
 
-	// $path = "data/files/tempSong/";
-	// $songList = 'data/json/songListtemp.json';
-	// $song_names = 'data/json/songnamesTemp.json';
+	$path = "data/files/tempSong/";
+	$songList = 'data/json/songListtemp.json';
+	$song_names = 'data/json/songnamesTemp.json';
 
 	$history = 'data/json/history.json';
 	$duration = "data/json/duration.json";

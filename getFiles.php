@@ -16,6 +16,7 @@
 	$listed_songs = json_decode(file_get_contents($song_names), true);
 
 	$srno = sizeof($dictionary);
+	$Lastsrno = $srno;
 
 	foreach($recurseFile as $pathname => $file){
 		$filename = $file->getFileName();

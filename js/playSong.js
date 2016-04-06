@@ -2,13 +2,16 @@ var songStack = [];
 var songWindow = [];
 var decay = 0.001;
 var windowLength = 10;
+var sim_matrix = [];
+var doUpdateSong = true;
+var version = 4;
 
-var songPath = "data/json/songList.json";
-//var songPath = "data/json/songListtemp.json";
+//var songPath = "data/json/songList.json";
+var songPath = "data/json/songListtemp.json";
 
-var sim_matrix_path = "data/json/sim_matrix.json";
-var index_map_path = "data/json/index_map.json";
-var duration_path = "data/json/duration.json";
+var sim_matrix_path = "data/json/sim_matrix.json?v="+version;
+var index_map_path = "data/json/index_map.json?v="+version;
+var duration_path = "data/json/duration.json?v="+version;
 
 function filterRow(array, findkey){
 	return array.filter(function (song) { return song.key == findkey });
@@ -41,15 +44,17 @@ function addDecay(){
 	})
 }
 
-function detectEnd(array, index_map, sim_matrix, duration_array){
+function detectEnd(array, index_map, duration_array){
 	var audio = document.getElementsByTagName('audio')[0];
 	audio.onended = function(){
-		updateSongTime(audio, sim_matrix, duration_array);
+		doUpdateSong = false;
+		updateSongTime(audio, duration_array);
+
 		resetSongList();
 		var reference = $('audio source').attr('ref').split('_').pop();
 		reference = "play_"+reference;
 
-		playnextSong(array, reference, index_map, sim_matrix, duration_array);
+		playnextSong(array, reference, index_map, duration_array);
 	}
 }
 
@@ -119,29 +124,29 @@ function logQuery(thiskey){
 	var key = thiskey;
 }
 
-function playHistorySong(array, index_map, sim_matrix, duration_array){
+function playHistorySong(array, index_map, duration_array){
 	$(document).on('click','.leftBarUlLi', function(){
 		var thisEleName = $(this).attr('hisref');
 		var thisEle = $('.listSongPlayIcon[name="'+thisEleName+'"]');
 		if(thisEle.length) {
-			triggerTrackSelection(thisEle, array, index_map, sim_matrix, duration_array);
+			triggerTrackSelection(thisEle, array, index_map, duration_array);
 		}
 	})	
 }
 
-function playnextSong(array, reference, index_map, sim_matrix, duration_array){
+function playnextSong(array, reference, index_map, duration_array){
 	var ulreference = $('audio source').attr('ul-ref');
 
 	var nextele = $('#'+ulreference).find('.listSongPlayIcon[name="'+reference+'"]');
 	nextele = nextele.parents('li').next().find('.listSongPlayIcon');
-
-	triggerTrackSelection(nextele, array, index_map, sim_matrix, duration_array);
+	
+	triggerTrackSelection(nextele, array, index_map, duration_array);
 }
 
-function playPauseSelected(array, index_map, sim_matrix, duration_array){
+function playPauseSelected(array, index_map, duration_array){
 	$(document).on('click', '.listSongPlayIcon', function(){
 		var thisEle = $(this);
-		triggerTrackSelection(thisEle, array, index_map, sim_matrix, duration_array);
+		triggerTrackSelection(thisEle, array, index_map, duration_array);
 	})
 }
 
@@ -160,16 +165,12 @@ function resetSongList(){
 function searchSongs(array, index_map){
 	$('.searchInput').on('keydown', function(e){
 		if((e.keyCode || e.which) == 13) {
-
 			$('.resultSongListUl').html('');
 			var query = $(this).val();
 			var search = [];
-			//console.log(index_map);
 			for(var key in array){
-				var rowkey = index_map[key];
-				// console.log(key);
-				// console.log(rowkey);
-				// console.log(array[rowkey]);
+				var rowkey = index_map[key];	
+				//console.log(array);
 				
 				if( findMatch(array[rowkey], query)){
 					search.push({'displayName': array[rowkey].displayName, 'albumArt': array[rowkey].albumArt, 'key':key});
@@ -205,27 +206,27 @@ function showResult(search, query){
 	}
 }
 
-function triggerPrevNextSelection(array, index_map, sim_matrix, duration_array){
+function triggerPrevNextSelection(array, index_map, duration_array){
 	
 	$('.playNextMain').click(function(){
 		var audio = document.getElementsByTagName('audio')[0];
-		updateSongTime(audio, sim_matrix, duration_array);
+		doUpdateSong = false;
+		updateSongTime(audio, duration_array);
 
 		var reference = $('audio source').attr('ref');	
 
-		playnextSong(array, reference, index_map, sim_matrix, duration_array);
+		playnextSong(array, reference, index_map, duration_array);
 	})
 	$('.playPrev').click(function(){
-		var ulreference = $('audio source').attr('ul-ref');
-
 		if(songStack.length > 1){
 			var audio = document.getElementsByTagName('audio')[0];
-			updateSongTime(audio, sim_matrix, duration_array);
+			doUpdateSong = false;
+			updateSongTime(audio, duration_array);
 
 			var key = songStack.pop();
 			key = songStack.pop();
 
-			var newele = $('#'+ulreference).find('.listSongPlayIcon[name="play_'+key+'"]');
+			var newele = $('#entireSongUl').find('.listSongPlayIcon[name="play_'+key+'"]');
 
 			triggerTrackSelection(newele, array, index_map);
 		}
@@ -233,17 +234,25 @@ function triggerPrevNextSelection(array, index_map, sim_matrix, duration_array){
 
 }
 
-function triggerTrackSelection(thisEle, array, index_map, sim_matrix, duration_array){
+function triggerTrackSelection(thisEle, array, index_map, duration_array){
+	
+	if(thisEle.attr('name') === undefined)
+		return;
+
 	var filename = thisEle.attr('name').split('_');
 	var key = filename.pop();
 		
 	if(filename[0] == "play"){
-		songStack.push(key);
+		if(songStack[songStack.length - 1] !== key)
+			songStack.push(key);
 		
 		var audioref = $('audio source').attr('ref');
 		if(audioref !== undefined){
 			var audio = document.getElementsByTagName('audio')[0];
-			updateSongTime(audio, sim_matrix, duration_array);
+			if(doUpdateSong)
+				updateSongTime(audio, duration_array);
+			
+			doUpdateSong = true;
 		}
 		
 		var path = array[index_map[key]].path;
@@ -274,7 +283,7 @@ function updateAppearance(key){
 	$('.listSongPlayIcon[name="pause_'+key+'"]').parents('.playOnAlbumArt').css('opacity', 1);
 }
 
-function updateSongTime(audio, sim_matrix, duration_array){
+function updateSongTime(audio, duration_array){
 	var currentTime = audio.currentTime;
 	var duration = audio.duration;
 
@@ -282,7 +291,7 @@ function updateSongTime(audio, sim_matrix, duration_array){
 
 	var song_info_array = [];
 	song_info_array.push(key, currentTime, duration);
-	pushToSongWindow(song_info_array, sim_matrix, duration_array);
+	pushToSongWindow(song_info_array, duration_array);
 	
 	if(isNaN(duration))
 		duration = 0;
@@ -303,20 +312,23 @@ function updateSongTime(audio, sim_matrix, duration_array){
 			duration_show_parent.find('.song-mduration').html(new_mean_duration);
 		}
 	})
-	
 }
 
 
 /** Similarity Matrix Stuffs **/
 
-function pushToSongWindow(song_info_array, sim_matrix, duration_array){
+function pushToSongWindow(song_info_array, duration_array){
 	var songkey = song_info_array[0];
 	var currentTime = song_info_array[1];
 	var duration = song_info_array[2];
-
-	if((currentTime/duration > 0.1) || (currentTime > 5)){
-		for(var windowkey in songWindow){
-			var prevSim = sim_matrix[songkey][windowkey];
+	console.log("KEY: "+songkey);
+	if(((currentTime/duration > 0.1) || (currentTime > 5)) && (songkey !== songWindow[0])){
+		var windowkeyarr = [];
+		var newSimarr = [];
+	
+		for(var forkey in songWindow){
+			var windowkey = songWindow[forkey];
+			var prevSim = +(sim_matrix[songkey][windowkey]);
 
 			var ns_mean_time = duration_array[songkey];
 			var ls_mean_time = duration_array[windowkey];
@@ -324,17 +336,22 @@ function pushToSongWindow(song_info_array, sim_matrix, duration_array){
 			//var weight = ns_mean_time * ls_mean_time;
 			var weight = 1;
 			var newSim = ((weight * (1/(windowkey+1)) * 2) + (prevSim * 3))/5;
+			newSim = newSim.toFixed(3);
 			sim_matrix[songkey][windowkey] = sim_matrix[windowkey][songkey] = newSim;
-			$.ajax({
+			newSim = newSim.toString();
+			console.log(windowkey + " " + newSim);
+			windowkeyarr.push(windowkey);
+			newSimarr.push(newSim);
+		}
+		$.ajax({
 				url: "/inc/log.php",
-				data: {sim_matrix: sim_matrix},
+				data: {songkey: songkey, windowkeyarr: windowkeyarr, newSimarr: newSimarr},
 				success: function(data){
-					//			
+					//
 				}
 			})
-		}
 		if(songWindow.length > windowLength)
-			var temp = song.pop();
+			var temp = songWindow.pop();
 		songWindow.unshift(songkey);
 	}	
 }
@@ -346,17 +363,18 @@ $(document).ready(function(){
 	$.getJSON(songPath, function(array){
 		$.getJSON(index_map_path, function(index_map){
 			$.getJSON(duration_path, function(duration_array){
-				$.getJSON(sim_matrix_path, function(sim_matrix){
+				$.getJSON(sim_matrix_path, function(sim_matrix_json){
+					sim_matrix = sim_matrix_json;
 					console.log("start");
-					playPauseSelected(array, index_map, sim_matrix, duration_array);
+					playPauseSelected(array, index_map, duration_array);
 					detectPlayerActivity();
 
 					searchSongs(array, index_map);
-					playHistorySong(array, index_map, sim_matrix, duration_array);
+					playHistorySong(array, index_map, duration_array);
 
-					detectEnd(array, index_map, sim_matrix, duration_array);
+					detectEnd(array, index_map, duration_array);
 
-					triggerPrevNextSelection(array, index_map, sim_matrix, duration_array);
+					triggerPrevNextSelection(array, index_map, duration_array);
 				})
 			})
 		})

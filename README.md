@@ -19,3 +19,16 @@ data
      -sim_matrix.json
      -songList.json
      -songnames.json
+
+Run this in terminal while adding any new songs in the data folder - 
+
+chmod -R 755 /var/www/html/data/files
+
+Change in url.php between temporary and actual files. 
+Also comment in playSong.js for switching between temporary and actual files
+
+
+reset.php
+
+If total_reset = true, complete new
+total_rest = false only for adding new files.

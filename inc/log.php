@@ -49,8 +49,18 @@
 		file_put_contents('../'.$duration, json_encode($durationarray));
 	}
 
-	if(isset($_GET['sim_matrix'])){
-		$sim_matrix_array = $_GET['sim_matrix'];
+	if(isset($_GET['songkey'])){
+		$songkey = intval($_GET['songkey']);
+		$windowkeyarr = $_GET['windowkeyarr'];
+		$newSimarr = $_GET['newSimarr'];
+		$sim_matrix_array = json_decode(file_get_contents('../'.$sim_matrix), true);
+		
+		for($i = 0; $i < sizeof($windowkeyarr); $i++){
+			$windowkey = intval($windowkeyarr[$i]);
+			$newSim = $newSimarr[$i];
+			$sim_matrix_array[$songkey][$windowkey] = $sim_matrix_array[$windowkey][$songkey] = $newSim;
+		}
+
 		file_put_contents('../'.$sim_matrix, json_encode($sim_matrix_array));
 	}
 ?>
