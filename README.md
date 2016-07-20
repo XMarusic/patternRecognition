@@ -3,7 +3,7 @@ Implementing smartShuffle technology and recommendations on the basis of similar
 
 Do this -
 
-Main directory me, 
+In main directory, 
 
 Make "data" folder
 Make this directory 
